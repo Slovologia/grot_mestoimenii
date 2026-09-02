@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Грот разрядов - Местоимения 6 класс</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(180deg, 
+                #0a4d7a 0%, #0d6ea0 20%, #1089c2 40%, 
+                #14a3d9 60%, #1bbce8 75%, #3dd1f0 85%, 
+                #7de3f5 92%, #c4a66a 96%, #a8884d 100%
+            );
+        }
+
+        .bubble {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
+            animation: bubbleRise linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes bubbleRise {
+            0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-100px) translateX(30px) scale(1); opacity: 0; }
+        }
+
+        .seaweed {
+            position: fixed;
+            bottom: 0;
+            width: 30px;
+            height: 150px;
+            background: linear-gradient(to top, #2d5016, #4a7c2a);
+            border-radius: 50% 50% 0 0;
+            transform-origin: bottom center;
+            animation: sway 4s ease-in-out infinite;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .title {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            z-index: 100;
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+
+        .game-field {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .grot {
+            position: absolute;
+            width: 200px;
+            height: 160px;
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .grot:hover { transform: scale(1.05); }
+        .grot.drag-over { transform: scale(1.1); filter: brightness(1.2); }
+
+        .grot-body { position: relative; width: 100%; height: 100%; }
+
+        .rock {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #c9a07a 0%, #b08560 30%, #8b6a4a 60%, #6d5238 100%);
+            border-radius: 50% 50% 20% 20% / 60% 60% 30% 30%;
+            box-shadow: 
+                inset -8px -8px 15px rgba(0,0,0,0.3),
+                inset 5px 5px 15px rgba(255,235,200,0.3),
+                0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .coral {
+            position: absolute;
+            font-size: 1.5em;
+            z-index: 5;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+            pointer-events: none;
+        }
+
+        .coral-1 { top: -10px; left: 10px; transform: rotate(-15deg); }
+        .coral-2 { top: -5px; right: 5px; transform: rotate(20deg); }
+        .coral-3 { bottom: 5px; left: -5px; transform: rotate(-30deg); font-size: 1.2em; }
+        .coral-4 { top: 20%; right: -8px; transform: rotate(10deg); font-size: 1.1em; }
+
+        .shell {
+            position: absolute;
+            font-size: 0.9em;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .shell-1 { top: 15%; left: 5%; }
+        .shell-2 { bottom: 10%; right: 10%; }
+
+        .grot-entrance {
+            position: absolute;
+            top: 30%;
+            left: 15%;
+            width: 70%;
+            height: 60%;
+            background: radial-gradient(ellipse at center, 
+                #3d2817 0%, #5a3a22 40%, #7a5233 80%, #8b6a4a 100%
+            );
+            border-radius: 50% 50% 10% 10% / 70% 70% 20% 20%;
+            box-shadow: 
+                inset 0 0 20px rgba(255,180,100,0.3),
+                inset 0 0 40px rgba(0,0,0,0.5),
+                0 0 15px rgba(255,180,100,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 6px;
+            overflow: visible;
+        }
+
+        .grot-name {
+            position: relative;
+            z-index: 10;
+            color: #fff;
+            font-size: 0.95em;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 4px #000, 0 0 8px #000, 2px 2px 4px rgba(0,0,0,0.9);
+            background: linear-gradient(135deg, rgba(255,140,0,0.85) 0%, rgba(230,81,0,0.85) 100%);
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 2px solid #ffecb3;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            margin-bottom: 3px;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .grot-hint {
+            color: #fff8e1;
+            font-size: 0.7em;
+            text-align: center;
+            opacity: 0;
+            max-height: 0;
+            transition: all 0.4s;
+            padding: 0 5px;
+            z-index: 10;
+            text-shadow: 1px 1px 2px #000;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            margin-top: 2px;
+        }
+
+        .grot:hover .grot-hint {
+            opacity: 1;
+            max-height: 50px;
+            padding: 4px 8px;
+        }
+
+        .grot-drop-zone {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .placed-stone {
+            background: linear-gradient(135deg, #b0bec5 0%, #78909c 100%);
+            color: #fff;
+            font-size: 0.65em;
+            padding: 3px 7px;
+            border-radius: 40%;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            cursor: grab;
+            transition: all 0.3s;
+        }
+
+        .placed-stone:hover {
+            transform: scale(1.1);
+        }
+
+        .placed-stone.correct {
+            background: linear-gradient(135deg, #66bb6a 0%, #2e7d32 100%);
+            box-shadow: 0 0 8px rgba(76,175,80,0.6);
+        }
+
+        .placed-stone.wrong {
+            background: linear-gradient(135deg, #ef5350 0%, #c62828 100%);
+            box-shadow: 0 0 8px rgba(244,67,54,0.6);
+            cursor: pointer;
+        }
+
+        .grot.top-1 { top: 75px; left: 3%; }
+        .grot.top-2 { top: 75px; left: 50%; transform: translateX(-50%); }
+        .grot.top-3 { top: 75px; right: 3%; }
+        .grot.left-1 { top: 35%; left: 1%; }
+        .grot.left-2 { top: 62%; left: 1%; }
+        .grot.right-1 { top: 35%; right: 1%; }
+        .grot.right-2 { top: 62%; right: 1%; }
+        .grot.bottom-1 { bottom: 25px; left: 18%; }
+        .grot.bottom-2 { bottom: 25px; right: 18%; }
+
+        .stones-area {
+            position: absolute;
+            top: 22%;
+            left: 22%;
+            right: 22%;
+            bottom: 22%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .stone {
+            position: absolute;
+            min-width: 70px;
+            height: 55px;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #cfd8dc 0%, #90a4ae 30%, #607d8b 60%, #455a64 100%);
+            border-radius: 50% 45% 55% 40% / 50% 55% 45% 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.95em;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            cursor: grab;
+            user-select: none;
+            box-shadow: 
+                inset -3px -3px 8px rgba(0,0,0,0.4),
+                inset 3px 3px 8px rgba(255,255,255,0.3),
+                0 4px 10px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            z-index: 6;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .stone::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 30%;
+            height: 20%;
+            background: radial-gradient(ellipse, rgba(255,255,255,0.5), transparent);
+            border-radius: 50%;
+        }
+
+        .stone:hover {
+            transform: scale(1.15);
+            z-index: 20;
+        }
+
+        .stone.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            animation: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        .stone:nth-child(2n) { animation-duration: 4.5s; animation-delay: 0.5s; }
+        .stone:nth-child(3n) { animation-duration: 5s; animation-delay: 1s; }
+        .stone:nth-child(5n) { animation-duration: 3.8s; animation-delay: 1.5s; }
+        .stone:nth-child(7n) { animation-duration: 4.2s; animation-delay: 0.8s; }
+
+        .check-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd54f 0%, #ff8f00 100%);
+            color: #3e2723;
+            border: 3px solid #5d4037;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            z-index: 200;
+            transition: all 0.3s;
+        }
+
+        .check-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .result-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-content {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            padding: 40px 60px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            border: 5px solid #f9a825;
+            max-width: 500px;
+            animation: popIn 0.5s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-content h2 { font-size: 2em; color: #0277bd; margin-bottom: 15px; }
+        .result-content p { font-size: 1.2em; color: #37474f; margin-bottom: 20px; }
+        .result-content .emoji { font-size: 3em; margin-bottom: 15px; }
+
+        .result-btn {
+            padding: 10px 30px;
+            font-size: 1em;
+            background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .result-btn:hover { transform: translateY(-2px); }
+
+        .fish {
+            position: fixed;
+            font-size: 2.2em;
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 2;
+            animation: swim 18s linear infinite;
+        }
+
+        @keyframes swim {
+            0% { transform: translateX(-100px) scaleX(-1); }
+            100% { transform: translateX(calc(100vw + 100px)) scaleX(-1); }
+        }
+
+        .bottom-coral {
+            position: fixed;
+            bottom: 0;
+            font-size: 2.5em;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.7;
+        }
+
+        /* Счётчик */
+        .counter {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #0277bd;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 1200px) {
+            .grot { width: 170px; height: 140px; }
+            .grot-name { font-size: 0.8em; }
+            .stone { min-width: 60px; height: 45px; font-size: 0.85em; }
+            .title { font-size: 1.5em; }
+            .coral { font-size: 1.2em; }
+        }
+
+        @media (max-width: 768px) {
+            .grot { width: 130px; height: 110px; }
+            .grot-name { font-size: 0.65em; padding: 3px 6px; }
+            .stone { min-width: 50px; height: 40px; font-size: 0.75em; }
+            .title { font-size: 1.2em; padding: 8px 20px; }
+            .stones-area { top: 18%; left: 18%; right: 18%; bottom: 18%; }
+            .coral { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="title">🌊 Грот разрядов </div>
+    <div class="counter" id="counter">Камушков в гротах: 0 / 42</div>
+
+    <div class="game-field" id="gameField">
+        <div class="stones-area" id="stonesArea"></div>
+    </div>
+
+    <button class="check-btn" onclick="checkAnswers()">🔍 Проверить</button>
+
+    <div class="result-modal" id="resultModal">
+        <div class="result-content" id="resultContent"></div>
+    </div>
+
+    <script>
+        const categories = [
+            { id: 'personal', name: 'Личные', definition: 'указывают на лицо', pronouns: ['я', 'ты', 'он', 'мы', 'вы', 'они'] },
+            { id: 'reflexive', name: 'Возвратное', definition: 'указывает на действующее лицо', pronouns: ['себя'] },
+            { id: 'possessive', name: 'Притяжательные', definition: 'указывают на принадлежность', pronouns: ['мой', 'твой', 'наш', 'ваш', 'свой'] },
+            { id: 'demonstrative', name: 'Указательные', definition: 'указывают на предмет', pronouns: ['этот', 'тот', 'такой', 'столько'] },
+            { id: 'definitive', name: 'Определительные', definition: 'указывают на обобщённый признак', pronouns: ['весь', 'всякий', 'каждый', 'сам', 'самый', 'любой', 'иной', 'другой'] },
+            { id: 'interrogative', name: 'Вопросительные', definition: 'служат для вопроса', pronouns: ['кто?', 'что?', 'какой?', 'чей?', 'который?', 'сколько?'] },
+            { id: 'relative', name: 'Относительные', definition: 'связывают части сложного предложения', pronouns: ['кто', 'что', 'какой', 'чей', 'который', 'сколько'] },
+            { id: 'indefinite', name: 'Неопределённые', definition: 'указывают на неизвестный предмет', pronouns: ['некто', 'нечто', 'некоторый', 'кто-то', 'что-нибудь'] },
+            { id: 'negative', name: 'Отрицательные', definition: 'указывают на отсутствие предмета', pronouns: ['никто', 'ничто', 'никакой', 'ничей', 'некого', 'нечего'] }
+        ];
+
+        const positions = ['top-1', 'top-2', 'top-3', 'left-1', 'left-2', 'right-1', 'right-2', 'bottom-1', 'bottom-2'];
+        let draggedStone = null;
+        let draggedMiniStone = null;
+        // ИСПРАВЛЕНИЕ: сохраняем и placedCategory, и correctCategory
+        let placements = {}; // {stoneId: {placedCategory, correctCategory, word}}
+        let totalStones = 0;
+
+        const coralSets = [
+            ['', '🐚', '🌺', '🐚'],
+            ['', '🪸', '🐚', '🌸'],
+            ['🐚', '🌺', '🪸', ''],
+            ['🪸', '', '🐚', '🪸'],
+            ['🌺', '🐚', '🌸', '🪸'],
+            ['🐚', '🪸', '🌺', '🐚'],
+            ['🪸', '🌺', '', '🌸'],
+            ['', '🪸', '🐚', '🌺'],
+            ['🐚', '🌸', '🪸', '']
+        ];
+
+        function createBubbles() {
+            for (let i = 0; i < 20; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 20 + 5;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.animationDuration = (Math.random() * 10 + 8) + 's';
+                bubble.style.animationDelay = Math.random() * 10 + 's';
+                document.body.appendChild(bubble);
+            }
+        }
+
+        function createSeaweeds() {
+            const pos = [5, 15, 30, 50, 70, 85, 95];
+            pos.forEach((p, i) => {
+                const seaweed = document.createElement('div');
+                seaweed.className = 'seaweed';
+                seaweed.style.left = p + '%';
+                seaweed.style.height = (100 + Math.random() * 100) + 'px';
+                seaweed.style.animationDelay = (i * 0.5) + 's';
+                document.body.appendChild(seaweed);
+            });
+        }
+
+        function createFish() {
+            const fishEmojis = ['🐠', '🐟', ''];
+            for (let i = 0; i < 3; i++) {
+                const fish = document.createElement('div');
+                fish.className = 'fish';
+                fish.textContent = fishEmojis[i];
+                fish.style.top = (20 + Math.random() * 60) + '%';
+                fish.style.animationDuration = (18 + Math.random() * 10) + 's';
+                fish.style.animationDelay = (i * 6) + 's';
+                document.body.appendChild(fish);
+            }
+        }
+
+        function createBottomCorals() {
+            const coralEmojis = ['🪸', '🌺', '🪸', '🌸', '🪸'];
+            const pos = [8, 25, 50, 75, 92];
+            pos.forEach((p, i) => {
+                const coral = document.createElement('div');
+                coral.className = 'bottom-coral';
+                coral.textContent = coralEmojis[i];
+                coral.style.left = p + '%';
+                coral.style.transform = `translateX(-50%) rotate(${(Math.random() - 0.5) * 20}deg)`;
+                document.body.appendChild(coral);
+            });
+        }
+
+        function updateCounter() {
+            const placed = Object.keys(placements).length;
+            document.getElementById('counter').textContent = `Камушков в гротах: ${placed} / ${totalStones}`;
+        }
+
+        function initGame() {
+            const gameField = document.getElementById('gameField');
+            const stonesArea = document.getElementById('stonesArea');
+            
+            document.querySelectorAll('.grot').forEach(g => g.remove());
+            stonesArea.innerHTML = '';
+            placements = {};
+
+            // Создаём гроты
+            categories.forEach((cat, i) => {
+                const grot = document.createElement('div');
+                grot.className = `grot ${positions[i]}`;
+                grot.dataset.categoryId = cat.id;
+                
+                const corals = coralSets[i];
+                grot.innerHTML = `
+                    <div class="grot-body">
+                        <div class="rock"></div>
+                        <div class="coral coral-1">${corals[0]}</div>
+                        <div class="coral coral-2">${corals[1]}</div>
+                        <div class="coral coral-3">${corals[2]}</div>
+                        <div class="coral coral-4">${corals[3]}</div>
+                        <div class="shell shell-1">🐚</div>
+                        <div class="shell shell-2">🐚</div>
+                        <div class="grot-entrance">
+                            <div class="grot-name">${cat.name}</div>
+                            <div class="grot-hint">${cat.definition}</div>
+                            <div class="grot-drop-zone" data-category="${cat.id}"></div>
+                        </div>
+                    </div>
+                `;
+                gameField.insertBefore(grot, stonesArea);
+
+                const dropZone = grot.querySelector('.grot-drop-zone');
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+                grot.addEventListener('dragover', handleDragOver);
+                grot.addEventListener('dragleave', handleDragLeave);
+                grot.addEventListener('drop', handleDrop);
+            });
+
+            // Создаём все камушки
+            const allStones = [];
+            categories.forEach(cat => {
+                cat.pronouns.forEach(pronoun => {
+                    allStones.push({ word: pronoun, categoryId: cat.id });
+                });
+            });
+
+            totalStones = allStones.length;
+            allStones.sort(() => Math.random() - 0.5);
+
+            const areaWidth = stonesArea.offsetWidth || 600;
+            const areaHeight = stonesArea.offsetHeight || 400;
+
+            allStones.forEach((item, index) => {
+                const stone = document.createElement('div');
+                stone.className = 'stone';
+                stone.draggable = true;
+                stone.textContent = item.word;
+                stone.dataset.word = item.word;
+                stone.dataset.correctCategory = item.categoryId;
+                stone.id = `stone-${index}`;
+                
+                const maxX = Math.max(areaWidth - 100, 100);
+                const maxY = Math.max(areaHeight - 70, 100);
+                stone.style.left = (Math.random() * maxX) + 'px';
+                stone.style.top = (Math.random() * maxY) + 'px';
+
+                stone.addEventListener('dragstart', handleDragStart);
+                stone.addEventListener('dragend', handleDragEnd);
+                
+                stonesArea.appendChild(stone);
+            });
+
+            updateCounter();
+        }
+
+        function handleDragStart(e) {
+            // Определяем, что тащим: большой камень или мини-камень из грота
+            if (this.classList.contains('placed-stone')) {
+                draggedMiniStone = this;
+                draggedStone = null;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.dataset.stoneId);
+                e.dataTransfer.setData('type', 'mini');
+            } else {
+                draggedStone = this;
+                draggedMiniStone = null;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.id);
+                e.dataTransfer.setData('type', 'big');
+            }
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.grot').forEach(g => g.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const grot = this.closest('.grot');
+            if (grot) grot.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const grot = this.closest('.grot');
+            if (grot) grot.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const grot = this.closest('.grot');
+            if (!grot) return false;
+            
+            grot.classList.remove('drag-over');
+            
+            const targetCategoryId = grot.dataset.categoryId;
+            const dropZone = grot.querySelector('.grot-drop-zone');
+            const type = e.dataTransfer.getData('type');
+            const id = e.dataTransfer.getData('text/plain');
+
+            if (type === 'big' && draggedStone) {
+                // Перетаскиваем большой камень из воды в грот
+                const stoneId = draggedStone.id;
+                const correctCategory = draggedStone.dataset.correctCategory;
+                const word = draggedStone.dataset.word;
+
+                // Проверяем, нет ли уже такого камня в этом гроте
+                const existing = Array.from(dropZone.querySelectorAll('.placed-stone'))
+                    .find(s => s.dataset.word === word);
+                if (existing) {
+                    draggedStone.classList.remove('dragging');
+                    return false;
+                }
+
+                // Сохраняем ПРАВИЛЬНУЮ категорию вместе с размещённой
+                placements[stoneId] = {
+                    placedCategory: targetCategoryId,
+                    correctCategory: correctCategory,
+                    word: word
+                };
+
+                // Создаём мини-камень в гроте
+                const miniStone = document.createElement('div');
+                miniStone.className = 'placed-stone';
+                miniStone.textContent = word;
+                miniStone.dataset.stoneId = stoneId;
+                miniStone.dataset.word = word;
+                miniStone.draggable = true;
+                miniStone.addEventListener('dragstart', handleDragStart);
+                miniStone.addEventListener('dragend', handleDragEnd);
+                // Двойной клик — вернуть в воду
+                miniStone.addEventListener('dblclick', returnToWater);
+                dropZone.appendChild(miniStone);
+
+                draggedStone.remove();
+                draggedStone = null;
+            } 
+            else if (type === 'mini' && draggedMiniStone) {
+                // Перетаскиваем мини-камень из одного грота в другой
+                const stoneId = draggedMiniStone.dataset.stoneId;
+                const word = draggedMiniStone.dataset.word;
+
+                // Проверяем, нет ли уже такого камня в целевом гроте
+                const existing = Array.from(dropZone.querySelectorAll('.placed-stone'))
+                    .find(s => s.dataset.word === word);
+                if (existing) {
+                    draggedMiniStone.classList.remove('dragging');
+                    return false;
+                }
+
+                // Удаляем старый мини-камень
+                draggedMiniStone.remove();
+
+                // Обновляем размещение
+                if (placements[stoneId]) {
+                    placements[stoneId].placedCategory = targetCategoryId;
+                }
+
+                // Создаём новый мини-камень
+                const newMini = document.createElement('div');
+                newMini.className = 'placed-stone';
+                newMini.textContent = word;
+                newMini.dataset.stoneId = stoneId;
+                newMini.dataset.word = word;
+                newMini.draggable = true;
+                newMini.addEventListener('dragstart', handleDragStart);
+                newMini.addEventListener('dragend', handleDragEnd);
+                newMini.addEventListener('dblclick', returnToWater);
+                dropZone.appendChild(newMini);
+
+                draggedMiniStone = null;
+            }
+
+            updateCounter();
+            return false;
+        }
+
+        // Вернуть камень обратно в воду
+        function returnToWater(e) {
+            const miniStone = e.currentTarget;
+            const stoneId = miniStone.dataset.stoneId;
+            const word = miniStone.dataset.word;
+            const correctCategory = placements[stoneId]?.correctCategory;
+
+            if (!correctCategory) return;
+
+            // Удаляем мини-камень
+            miniStone.remove();
+
+            // Удаляем из placements
+            delete placements[stoneId];
+
+            // Создаём большой камень обратно в воде
+            const stonesArea = document.getElementById('stonesArea');
+            const areaWidth = stonesArea.offsetWidth || 600;
+            const areaHeight = stonesArea.offsetHeight || 400;
+            const maxX = Math.max(areaWidth - 100, 100);
+            const maxY = Math.max(areaHeight - 70, 100);
+
+            const stone = document.createElement('div');
+            stone.className = 'stone';
+            stone.draggable = true;
+            stone.textContent = word;
+            stone.dataset.word = word;
+            stone.dataset.correctCategory = correctCategory;
+            stone.id = stoneId;
+            stone.style.left = (Math.random() * maxX) + 'px';
+            stone.style.top = (Math.random() * maxY) + 'px';
+            stone.addEventListener('dragstart', handleDragStart);
+            stone.addEventListener('dragend', handleDragEnd);
+            stonesArea.appendChild(stone);
+
+            updateCounter();
+        }
+
+        function checkAnswers() {
+            let correct = 0;
+            const total = Object.keys(placements).length;
+
+            // Сбрасываем подсветку
+            document.querySelectorAll('.placed-stone').forEach(s => {
+                s.classList.remove('correct', 'wrong');
+            });
+
+            // ИСПРАВЛЕНИЕ: используем сохранённые correctCategory из placements
+            Object.keys(placements).forEach(stoneId => {
+                const placement = placements[stoneId];
+                const miniStone = document.querySelector(`.placed-stone[data-stone-id="${stoneId}"]`);
+                
+                if (placement.placedCategory === placement.correctCategory) {
+                    correct++;
+                    if (miniStone) miniStone.classList.add('correct');
+                } else {
+                    if (miniStone) miniStone.classList.add('wrong');
+                }
+            });
+
+            showResult(correct, total);
+        }
+
+        function showResult(correct, total) {
+            const modal = document.getElementById('resultModal');
+            const content = document.getElementById('resultContent');
+            
+            let emoji, title, message;
+            
+            if (total === 0) {
+                emoji = '🐚';
+                title = 'Пусто!';
+                message = 'Перетащи камушки в гроты, прежде чем проверять!';
+            } else if (correct === total && total === totalStones) {
+                emoji = '🏆';
+                title = 'Молодец!';
+                message = `Все ${correct} местоимений на своих местах! Ты настоящий знаток!`;
+            } else if (correct === total) {
+                emoji = '🎉';
+                title = 'Отлично!';
+                message = `Все ${total} размещённых камушков правильные! Но осталось ещё ${totalStones - total} штук.`;
+            } else {
+                emoji = '🌊';
+                title = 'Почти!';
+                message = `Правильно: ${correct} из ${total}. Красные камушки — неправильные. Двойной клик по ним вернёт их в воду!`;
+            }
+            
+            content.innerHTML = `
+                <div class="emoji">${emoji}</div>
+                <h2>${title}</h2>
+                <p>${message}</p>
+                <button class="result-btn" onclick="closeModal()">Продолжить</button>
+                <button class="result-btn" onclick="resetGame()">Заново</button>
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        function resetGame() {
+            closeModal();
+            initGame();
+        }
+
+        window.addEventListener('load', () => {
+            createBubbles();
+            createSeaweeds();
+            createFish();
+            createBottomCorals();
+            setTimeout(initGame, 100);
+        });
+
+        window.addEventListener('resize', () => {
+            const stonesArea = document.getElementById('stonesArea');
+            const stones = stonesArea.querySelectorAll('.stone');
+            const areaWidth = stonesArea.offsetWidth;
+            const areaHeight = stonesArea.offsetHeight;
+            stones.forEach(stone => {
+                const maxX = Math.max(areaWidth - 100, 100);
+                const maxY = Math.max(areaHeight - 70, 100);
+                stone.style.left = (Math.random() * maxX) + 'px';
+                stone.style.top = (Math.random() * maxY) + 'px';
+            });
+        });
+    </script>
+</body>
+</html>
